@@ -20,7 +20,7 @@ namespace bustub {
 LRUKReplacer::LRUKReplacer(size_t num_frames, size_t k) : replacer_size_(num_frames), k_(k) {}
 
 auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
-  this->latch_.lock();
+  std::scoped_lock lock(this->latch_);
   size_t max_k = this->current_timestamp_ + 1;
   for (auto &iter : this->node_store_) {
     auto node = iter.second;
@@ -49,15 +49,20 @@ auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
       }
     }
   }
-  this->latch_.unlock();
-  this->Remove(*frame_id);
+  auto node = this->node_store_.find(*frame_id);
+  if (node == this->node_store_.end()) {
+    return (max_k != this->current_timestamp_ + 1);
+  }
+  BUSTUB_ASSERT(node->second.is_evictable_, "frame is not evictable");
+  this->node_store_.erase(*frame_id);
+  this->curr_size_ -= 1;
   return (max_k != this->current_timestamp_ + 1);
 }
 
 void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType access_type) {
+  std::scoped_lock lock(this->latch_);
   size_t frame = frame_id;
   BUSTUB_ASSERT(frame <= this->replacer_size_, "frame is larger than replacer size");
-  std::scoped_lock lock(this->latch_);
   auto node = this->node_store_.find(frame_id);
   if (node != this->node_store_.end()) {
     node->second.history_.push_back(this->current_timestamp_);

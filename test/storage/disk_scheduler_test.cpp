@@ -10,21 +10,20 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "storage/disk/disk_scheduler.h"
 #include <cstring>
 #include <future>  // NOLINT
 #include <memory>
-
 #include "common/exception.h"
 #include "gtest/gtest.h"
 #include "storage/disk/disk_manager_memory.h"
-#include "storage/disk/disk_scheduler.h"
 
 namespace bustub {
 
 using bustub::DiskManagerUnlimitedMemory;
 
 // NOLINTNEXTLINE
-TEST(DiskSchedulerTest, DISABLED_ScheduleWriteReadPageTest) {
+TEST(DiskSchedulerTest, ScheduleWriteReadPageTest) {
   char buf[BUSTUB_PAGE_SIZE] = {0};
   char data[BUSTUB_PAGE_SIZE] = {0};
 
@@ -44,7 +43,6 @@ TEST(DiskSchedulerTest, DISABLED_ScheduleWriteReadPageTest) {
   ASSERT_TRUE(future1.get());
   ASSERT_TRUE(future2.get());
   ASSERT_EQ(std::memcmp(buf, data, sizeof(buf)), 0);
-
   disk_scheduler = nullptr;  // Call the DiskScheduler destructor to finish all scheduled jobs.
   dm->ShutDown();
 }
