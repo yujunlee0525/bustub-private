@@ -54,7 +54,6 @@ class ExecutionEngine {
   auto Execute(const AbstractPlanNodeRef &plan, std::vector<Tuple> *result_set, Transaction *txn,
                ExecutorContext *exec_ctx) -> bool {
     BUSTUB_ASSERT((txn == exec_ctx->GetTransaction()), "Broken Invariant");
-
     // Construct the executor for the abstract plan node
     auto executor = ExecutorFactory::CreateExecutor(exec_ctx, plan);
 

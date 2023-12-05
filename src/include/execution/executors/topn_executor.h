@@ -13,6 +13,7 @@
 #pragma once
 
 #include <memory>
+#include <queue>
 #include <utility>
 #include <vector>
 
@@ -23,7 +24,28 @@
 #include "storage/table/tuple.h"
 
 namespace bustub {
+struct CompareTuple {
+  const TopNPlanNode *plan_;
+  Schema *schema_;
 
+  CompareTuple(const TopNPlanNode *plan, Schema *schema) : plan_(plan), schema_(schema) {}
+
+  auto operator()(Tuple &a, Tuple &b) -> bool {
+    for (auto &order_by : plan_->GetOrderBy()) {
+      auto order_type = order_by.first;
+      auto expr = order_by.second;
+      auto first_value = expr->Evaluate(&a, *schema_);
+      auto second_value = expr->Evaluate(&b, *schema_);
+      if (first_value.CompareGreaterThan(second_value) == CmpBool::CmpTrue) {
+        return order_type == OrderByType::DESC;
+      }
+      if (first_value.CompareLessThan(second_value) == CmpBool::CmpTrue) {
+        return order_type != OrderByType::DESC;
+      }
+    }
+    return false;
+  }
+};
 /**
  * The TopNExecutor executor executes a topn.
  */
@@ -63,5 +85,9 @@ class TopNExecutor : public AbstractExecutor {
   const TopNPlanNode *plan_;
   /** The child executor from which tuples are obtained */
   std::unique_ptr<AbstractExecutor> child_executor_;
+
+  std::vector<Tuple> tuples_;
+
+  int iterator_;
 };
 }  // namespace bustub
